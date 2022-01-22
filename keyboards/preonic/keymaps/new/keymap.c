@@ -24,6 +24,7 @@ enum preonic_layers {
   _GAMING,
   _ESDF_GAMING,
   _SIDEWAYS_GAMING,
+  _MACROPAD,
   _LOWER,
   _RAISE,
   _ADJUST
@@ -36,6 +37,7 @@ enum preonic_keycodes {
   GAMING,
   ESDF_GAMING,
   SIDEWAYS_GAMING,
+  MACROPAD,
   LOWER,
   RAISE,
   BACKLIT,
@@ -44,7 +46,8 @@ enum preonic_keycodes {
   THREE_WITH_F,
   THREE_WITH_LCTL,
   THREE_WITH_LSHFT,
-  SG
+  SG,
+  GG
 };
 
 // Tap Dance declarations
@@ -327,6 +330,27 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   LOWER, KC_LCTL, KC_LGUI,RAISE, LOWER,   KC_SPC,  KC_ESC,  KC_TAB,   KC_CAPS, KC_LSFT, KC_LCTL,   KC_RGHT
 ),
 
+/* Qwerty
+ * ,-----------------------------------------------------------------------------------.
+ * | Esc/`  |   1  |   2  |   3  |   4  |   5  |   6  |   7  |   8  |   9  |   0  | Bksp |
+ * |------+------+------+------+------+------+------+------+------+------+------+------|
+ * | Tab  |   Q  |   W  |   E  |   R  |   T  |   Y  |   U  |   I  |   O  |   P  | Del  |
+ * |------+------+------+------+------+-------------+------+------+------+------+------|
+ * | CAPS    |   A  |   S  |   D  |   F  |   G  |   H  |   J  |   K  |   L  |   ;  |  "   |
+ * |------+------+------+------+------+------|------+------+------+------+------+------|
+ * | Shift|   Z  |   X  |   C  |   V  |   B  |   N  |   M  |   ,  |   .  |   /  |Enter |
+ * |------+------+------+------+------+------+------+------+------+------+------+------|
+ * | Brite| Ctrl | Alt  | GUI  |Lower |    Space    |Raise | Left | Down |  Up  |Right |
+ * `-----------------------------------------------------------------------------------'
+ */
+[_MACROPAD] = LAYOUT_preonic_grid(
+  KC_ESC,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,   KC_F5,  KC_F10,   KC_F15,       KC_MNXT,
+  KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,   KC_F4,  KC_F9,  KC_F14,       KC_MPLY,
+  KC_CAPS,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,  KC_F3,  KC_F8,    KC_F13,      KC_MPRV,
+  KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,   KC_F2,  KC_F7,       KC_F12,      GG,
+  LOWER, KC_LCTL, KC_LALT, KC_LGUI, LOWER,   KC_SPC,  KC_SPC,  RAISE,    KC_F1,  KC_F6,       KC_F11,  KC_MNXT
+),
+
 /* Lower
  * ,-----------------------------------------------------------------------------------.
  * |   ~  |   !  |   @  |   #  |   $  |   %  |   ^  |   &  |   *  |   (  |   )  | Bksp |
@@ -378,7 +402,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  * |------+------+------+------+------+-------------+------+------+------+------+------|
  * |      |      |Aud cy|Aud on|AudOff|AGnorm|AGswap|Qwerty|Colemk|Dvorak|      |      |
  * |------+------+------+------+------+------|------+------+------+------+------+------|
- * |      |Voice-|Voice+|Mus on|MusOff|MidiOn|MidOff|Gaming|      |      |      |      |
+ * |      |Voice-|Voice+|Mus on|MusOff|MidiOn|MidOff|Gaming|ESDF  |      |      |      |
  * |------+------+------+------+------+------+------+------+------+------+------+------|
  * |      |      |      |      |      |             |      |      |      |      |      |
  * `-----------------------------------------------------------------------------------'
@@ -387,7 +411,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,
   _______, RESET,   DEBUG,   _______, _______, _______, SIDEWAYS_GAMING, TERM_ON, TERM_OFF,_______, _______, KC_DEL,
   _______, _______, MU_MOD,  AU_ON,   AU_OFF,  AG_NORM, AG_SWAP, QWERTY,  COLEMAK, DVORAK,  _______, _______,
-  _______, MUV_DE,  MUV_IN,  MU_ON,   MU_OFF,  MI_ON,   MI_OFF,  GAMING, ESDF_GAMING, _______, _______, _______,
+  _______, MUV_DE,  MUV_IN,  MU_ON,   MU_OFF,  MI_ON,   MI_OFF,  GAMING, ESDF_GAMING, MACROPAD, _______, _______,
   _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______
 )
 
@@ -404,6 +428,14 @@ static bool is_e_repeat = false;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
+        case GG:
+          if(record->event.pressed) {
+            SEND_STRING(SS_TAP(X_ENT)SS_TAP(X_G)SS_TAP(X_G)SS_TAP(X_ENT));
+          }
+           else {
+
+          }
+          break;
         case SG:
           if(record->event.pressed) {
             SEND_STRING(SS_DOWN(X_SPC));
@@ -491,6 +523,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           }
           return false;
           break;
+        case MACROPAD:
+          if (record->event.pressed) {
+            set_single_persistent_default_layer(_MACROPAD);
+          }
+          return false;
+          break;
         case LOWER:
           if (record->event.pressed) {
             check = rgblight_get_mode();
@@ -550,49 +588,49 @@ uint16_t muse_counter = 0;
 uint8_t muse_offset = 70;
 uint16_t muse_tempo = 50;
 
-void encoder_update_user(uint8_t index, bool clockwise) {
-  if (muse_mode) {
-    if (IS_LAYER_ON(_RAISE)) {
-      if (clockwise) {
-        muse_offset++;
-      } else {
-        muse_offset--;
-      }
-    } else {
-      if (clockwise) {
-        muse_tempo+=1;
-      } else {
-        muse_tempo-=1;
-      }
-    }
-  } else {
-    if (clockwise) {
-      register_code(KC_PGDN);
-      unregister_code(KC_PGDN);
-    } else {
-      register_code(KC_PGUP);
-      unregister_code(KC_PGUP);
-    }
-  }
-}
+// void encoder_update_user(uint8_t index, bool clockwise) {
+//   if (muse_mode) {
+//     if (IS_LAYER_ON(_RAISE)) {
+//       if (clockwise) {
+//         muse_offset++;
+//       } else {
+//         muse_offset--;
+//       }
+//     } else {
+//       if (clockwise) {
+//         muse_tempo+=1;
+//       } else {
+//         muse_tempo-=1;
+//       }
+//     }
+//   } else {
+//     if (clockwise) {
+//       register_code(KC_PGDN);
+//       unregister_code(KC_PGDN);
+//     } else {
+//       register_code(KC_PGUP);
+//       unregister_code(KC_PGUP);
+//     }
+//   }
+// }
 
-void dip_switch_update_user(uint8_t index, bool active) {
-    switch (index) {
-        case 0:
-            if (active) {
-                layer_on(_ADJUST);
-            } else {
-                layer_off(_ADJUST);
-            }
-            break;
-        case 1:
-            if (active) {
-                muse_mode = true;
-            } else {
-                muse_mode = false;
-            }
-    }
-}
+// void dip_switch_update_user(uint8_t index, bool active) {
+//     switch (index) {
+//         case 0:
+//             if (active) {
+//                 layer_on(_ADJUST);
+//             } else {
+//                 layer_off(_ADJUST);
+//             }
+//             break;
+//         case 1:
+//             if (active) {
+//                 muse_mode = true;
+//             } else {
+//                 muse_mode = false;
+//             }
+//     }
+// }
 
 
 void matrix_scan_user(void) {
