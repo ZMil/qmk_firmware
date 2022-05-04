@@ -14,6 +14,28 @@
   #include "rgblight.h"
 #endif
 
+#ifdef RAW_ENABLE
+  #include "raw_hid.h"
+  #include <string.h>
+  #define RAW_EPSIZE 32
+  uint8_t pixel_index = 0;
+  bool pixel_state = true;
+#endif
+
+
+enum raw_hid_commands {
+  WRITE=1,
+  PIXEL=2,
+  SCROLL=3,
+  BRIGHTNESS=4,
+  QUERY=5,
+  LAYER=6,
+  EXIT=7,
+  CLEAR=8,
+};
+
+bool is_hid_connected = false;
+
 extern uint8_t is_master;
 
 #define _QWERTY 0
@@ -319,8 +341,15 @@ void oled_task_user(void) {
         // oled_write_ln(read_mode_icon(keymap_config.swap_lalt_lgui), false);
         // oled_write_ln(read_host_led_state(), false);
     } else {
-        oled_write(read_logo(), false);
+        // oled_write(read_logo(), false);
+        oled_advance_page(true);
+        if ( is_hid_connected ) {
+            oled_write_char(0x04, false);
+            oled_write_P(PSTR("\n\n\n"), false);
+        } else {
+            oled_write_P(PSTR("\n\n\n"), false);
         }
+    }
 }
 #endif // OLED_DRIVER_ENABLE
 
@@ -392,3 +421,20 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
 }
 #endif
 
+
+#if RAW_ENABLE
+void raw_hid_receive(uint8_t *data, uint8_t length) {
+    is_hid_connected = true;
+    // const char *oled_data = (char*)data;
+    // uint8_t send_data[RAW_EPSIZE] = {0};
+    uint8_t command = data[0];
+    switch( command ) {
+        case EXIT:
+            is_hid_connected = false;
+            break;
+    default:
+        break;
+    }
+    raw_hid_send(data, length);
+}   
+#endif
