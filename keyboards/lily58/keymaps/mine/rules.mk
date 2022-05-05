@@ -8,6 +8,8 @@ RAW_ENABLE = yes
 OLED_ENABLE = yes
 PROTOCOL_LUFA = yes
 SSD1306OLED = yes
+# SPLIT_KEYBOARD = yes
+# SPLIT_TRANSPORT = custom
 
 # If you want to change the display of OLED, you need to change here
 SRC +=  ./lib/rgb_state_reader.c \

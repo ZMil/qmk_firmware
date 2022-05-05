@@ -48,4 +48,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   // #define ENCODER_DIRECTION_FLIP
 #endif
 
-// #define SPLIT_TRANSPORT_MIRROR
+#define SPLIT_TRANSPORT_MIRROR
+#define SPLIT_LAYER_STATE_ENABLE

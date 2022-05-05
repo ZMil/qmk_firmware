@@ -315,38 +315,48 @@ const char *read_keylogs(void);
 //   }
 // }
 
+static void oled_write_layer(void) {
+   oled_write_P(PSTR("Layer: "), false);
+    switch (get_highest_layer(layer_state)) {
+        case _QWERTY:
+            oled_write_P(PSTR("Qwerty\n"), false);
+            break;
+        case _APEX:
+            oled_write_P(PSTR("Apex\n"), false);
+            break;
+        case _RAISE:
+            oled_write_P(PSTR("Raise\n"), false);
+            break;
+        case _LOWER:
+            oled_write_P(PSTR("Lower\n"), false);
+            break;
+        case _ADJUST:
+            oled_write_P(PSTR("Adjust\n"), false);
+            break;
+        default:
+            // Or use the write_ln shortcut over adding '\n' to the end of your string
+            oled_write_ln_P(PSTR("Undefined"), false);
+      }
+}
+
 #endif // OLED_DRIVER_ENABLE
 
 bool oled_task_user(void) {
     // Host Keyboard Layer Status
     if (is_keyboard_master()) {
+        // oled_clear();
+        // All hid stuff on master side since I can't figure out transport and f it all.   
+        if ( !is_oled_on() ) {
+          oled_on();
+        }
         if ( is_hid_connected ) {
             oled_write_char(0x04, false);
-            // oled_write_P(PSTR("\n\n\n"), false);
+            oled_write_P(PSTR("\n\n\n"), false);
         } else {
+            oled_write(read_logo(), false);
             // oled_write_P(PSTR("\n\n\n"), false);
         }
-      oled_write_P(PSTR("Layer: "), false);
-      switch (get_highest_layer(layer_state)) {
-          case _QWERTY:
-              oled_write_P(PSTR("Qwerty\n"), false);
-              break;
-          case _APEX:
-              oled_write_P(PSTR("Apex\n"), false);
-              break;
-          case _RAISE:
-              oled_write_P(PSTR("Raise\n"), false);
-              break;
-          case _LOWER:
-              oled_write_P(PSTR("Lower\n"), false);
-              break;
-          case _ADJUST:
-              oled_write_P(PSTR("Adjust\n"), false);
-              break;
-          default:
-              // Or use the write_ln shortcut over adding '\n' to the end of your string
-              oled_write_ln_P(PSTR("Undefined"), false);
-        }
+     
       //  if ( is_hid_connected ) {
       //       oled_write_char(0x04, false);
       //       oled_write_P(PSTR("\n\n\n"), false);
@@ -356,13 +366,20 @@ bool oled_task_user(void) {
         // oled_write_ln(read_mode_icon(keymap_config.swap_lalt_lgui), false);
         // oled_write_ln(read_host_led_state(), false);
     } else {
-        if ( is_hid_connected ) {
-            oled_write_char(0x04, false);
-            // oled_write_P(PSTR("\n\n\n"), false);
-        } else {
-            // oled_advance_page(true);
-            oled_write(read_logo(), false);
+        // if ( is_hid_connected ) {
+        //     oled_write_char(0x04, false);
+        //     // oled_write_P(PSTR("\n\n\n"), false);
+        // } else {
+        //     // oled_advance_page(true);
+        //     // oled_set_cursor(0, );
+        //     oled_write(read_logo(), false);
+        // }
+        // oled_clear();
+
+        if ( !is_oled_on() ) {
+          oled_on();
         }
+        oled_write_layer();
     }
     return false;
 }
@@ -432,6 +449,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
 #endif
 
 void raw_hid_receive(uint8_t *data, uint8_t length) {
+    raw_hid_send(data, length);
     is_hid_connected = true;
     const char *oled_data = (char*)data;
     uint8_t send_data[RAW_EPSIZE] = {0};
@@ -461,7 +479,7 @@ void raw_hid_receive(uint8_t *data, uint8_t length) {
                     oled_on();
                     break;
                 case 3:
-                    oled_off();
+                    // oled_off();
                     break;
                 case 4:
                     // current layer
