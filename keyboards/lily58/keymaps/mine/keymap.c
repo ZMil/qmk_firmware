@@ -285,8 +285,9 @@ void matrix_init_user(void) {
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
   if (!is_keyboard_master())
-    return OLED_ROTATION_180;  // flips the display 180 degrees if offhand
-  return rotation;
+    return OLED_ROTATION_0;  // flips the display 180 degrees if offhand
+  return OLED_ROTATION_180;  
+  // return rotation;
 }
 
 // When you add source files to SRC in rules.mk, you can use functions.
