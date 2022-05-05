@@ -373,9 +373,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   return true;
 }
 
-#ifdef ENCODER_ENABLE
-bool encoder_update_user(uint8_t index, bool clockwise) {
-    if (index == 0) { /* First encoder */
+static void volume_encoder(uint8_t index, bool clockwise) {
+  if (index == 0) { /* First encoder */
         if (clockwise) {
             tap_code(KC_VOLU);
         } else {
@@ -387,6 +386,24 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
         } else {
             tap_code(KC_VOLU);
         }
+    }
+})
+
+#ifdef ENCODER_ENABLE
+bool encoder_update_user(uint8_t index, bool clockwise) {
+    switch (get_highest_layer(layer_state)) {
+      case _QWERTY:
+          volume_encoder(index, clockwise);
+          break;
+      case _RAISE:
+          
+          break;
+      case _LOWER:
+          
+          break;
+      case _ADJUST:
+          
+          break;
     }
     return true;
 }
