@@ -387,7 +387,23 @@ static void volume_encoder(uint8_t index, bool clockwise) {
             tap_code(KC_VOLU);
         }
     }
-})
+}
+
+static void brightneess_encoder(uint8_t index, bool clockwise) {
+  if (index == 0) { /* First encoder */
+        if (clockwise) {
+            tap_code(KC_BRIGHTNESS_UP);
+        } else {
+            tap_code(KC_BRIGHTNESS_DOWN);
+        }
+    } else if (index == 1) { /* Second encoder */
+        if (clockwise) {
+            tap_code(KC_BRIGHTNESS_DOWN);
+        } else {
+            tap_code(KC_BRIGHTNESS_UP);
+        }
+    }
+}
 
 #ifdef ENCODER_ENABLE
 bool encoder_update_user(uint8_t index, bool clockwise) {
@@ -399,7 +415,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
           
           break;
       case _LOWER:
-          
+          brightneess_encoder(index, clockwise);
           break;
       case _ADJUST:
           
