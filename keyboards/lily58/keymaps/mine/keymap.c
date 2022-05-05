@@ -281,7 +281,7 @@ void matrix_init_user(void) {
 }
 
 //SSD1306 OLED update loop, make sure to enable OLED_DRIVER_ENABLE=yes in rules.mk
-#ifdef OLED_DRIVER_ENABLE
+#ifdef OLED_ENABLE
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
   if (!is_keyboard_master())
@@ -314,52 +314,62 @@ const char *read_keylogs(void);
 //     oled_write(read_logo(), false);
 //   }
 // }
-void oled_task_user(void) {
+
+#endif // OLED_DRIVER_ENABLE
+
+bool oled_task_user(void) {
     // Host Keyboard Layer Status
     if (is_keyboard_master()) {
-    oled_write_P(PSTR("Layer: "), false);
-    switch (get_highest_layer(layer_state)) {
-        case _QWERTY:
-            oled_write_P(PSTR("QWerty\n"), false);
-            break;
-        case _APEX:
-            oled_write_P(PSTR("Apex\n"), false);
-            break;
-        case _RAISE:
-            oled_write_P(PSTR("Raise\n"), false);
-            break;
-        case _LOWER:
-            oled_write_P(PSTR("Lower\n"), false);
-            break;
-        case _ADJUST:
-            oled_write_P(PSTR("Adjust\n"), false);
-            break;
-        default:
-            // Or use the write_ln shortcut over adding '\n' to the end of your string
-            oled_write_ln_P(PSTR("Undefined"), false);
+        if ( is_hid_connected ) {
+            oled_write_char(0x04, false);
+            // oled_write_P(PSTR("\n\n\n"), false);
+        } else {
+            // oled_write_P(PSTR("\n\n\n"), false);
         }
+      oled_write_P(PSTR("Layer: "), false);
+      switch (get_highest_layer(layer_state)) {
+          case _QWERTY:
+              oled_write_P(PSTR("Qwerty\n"), false);
+              break;
+          case _APEX:
+              oled_write_P(PSTR("Apex\n"), false);
+              break;
+          case _RAISE:
+              oled_write_P(PSTR("Raise\n"), false);
+              break;
+          case _LOWER:
+              oled_write_P(PSTR("Lower\n"), false);
+              break;
+          case _ADJUST:
+              oled_write_P(PSTR("Adjust\n"), false);
+              break;
+          default:
+              // Or use the write_ln shortcut over adding '\n' to the end of your string
+              oled_write_ln_P(PSTR("Undefined"), false);
+        }
+      //  if ( is_hid_connected ) {
+      //       oled_write_char(0x04, false);
+      //       oled_write_P(PSTR("\n\n\n"), false);
+      //   } else {
+      //       oled_write_P(PSTR("\n\n\n"), false);
+      //   }
         // oled_write_ln(read_mode_icon(keymap_config.swap_lalt_lgui), false);
         // oled_write_ln(read_host_led_state(), false);
     } else {
-        // oled_write(read_logo(), false);
-        oled_advance_page(true);
         if ( is_hid_connected ) {
             oled_write_char(0x04, false);
-            oled_write_P(PSTR("\n\n\n"), false);
+            // oled_write_P(PSTR("\n\n\n"), false);
         } else {
-            oled_write_P(PSTR("\n\n\n"), false);
+            // oled_advance_page(true);
+            oled_write(read_logo(), false);
         }
     }
+    return false;
 }
-#endif // OLED_DRIVER_ENABLE
+
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  if (record->event.pressed) {
-#ifdef OLED_DRIVER_ENABLE
-    set_keylog(keycode, record);
-#endif
-    // set_timelog();
-  }
+
 
   switch (keycode) {
     case LOWER:
@@ -421,20 +431,73 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
 }
 #endif
 
-
-#if RAW_ENABLE
 void raw_hid_receive(uint8_t *data, uint8_t length) {
     is_hid_connected = true;
-    // const char *oled_data = (char*)data;
-    // uint8_t send_data[RAW_EPSIZE] = {0};
+    const char *oled_data = (char*)data;
+    uint8_t send_data[RAW_EPSIZE] = {0};
     uint8_t command = data[0];
     switch( command ) {
+      case WRITE:
+            oled_set_cursor(0, data[1]);
+            oled_write(oled_data + 2, false);
+            break;
         case EXIT:
             is_hid_connected = false;
+            break;
+        case BRIGHTNESS:
+            oled_set_brightness(data[1]);
+            break;
+        case QUERY:
+            switch( data[1] ) {
+                case 1:
+                    if ( is_oled_on() ) {
+                        send_data[0] = 1;
+                    } else {
+                        send_data[0] = 0;
+                    }
+                    raw_hid_send(send_data, length);
+                    break;
+                case 2:
+                    oled_on();
+                    break;
+                case 3:
+                    oled_off();
+                    break;
+                case 4:
+                    // current layer
+                    send_data[0] = get_highest_layer(layer_state);
+                    raw_hid_send(send_data, length);
+                case 5:
+                    // current brightness
+                    send_data[0] = oled_get_brightness();
+                    raw_hid_send(send_data, length);
+                    break;
+                case 6:
+                    send_data[0] = oled_max_chars();
+                    raw_hid_send(send_data, length);
+                    break;
+                case 7:
+                    send_data[0] = oled_max_lines();
+                    raw_hid_send(send_data, length);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case CLEAR:
+            switch( data[1] ) {
+                case 8:
+                    oled_clear();
+                    break;
+                default:
+                    oled_set_cursor(0, data[1]);
+                    oled_advance_page(true);
+                    break;
+            }
             break;
     default:
         break;
     }
     raw_hid_send(data, length);
 }   
-#endif
+
