@@ -412,7 +412,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
           volume_encoder(index, clockwise);
           break;
       case _RAISE:
-          
+          // TODO: OLED swap screen?
           break;
       case _LOWER:
           brightneess_encoder(index, clockwise);
