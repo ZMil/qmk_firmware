@@ -285,8 +285,8 @@ void matrix_init_user(void) {
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
   if (!is_keyboard_master())
-    return OLED_ROTATION_0;  // flips the display 180 degrees if offhand
-  return OLED_ROTATION_180;  
+    return OLED_ROTATION_270;  // flips the display 180 degrees if offhand
+  return OLED_ROTATION_270;  
   // return rotation;
 }
 
@@ -316,29 +316,72 @@ const char *read_keylogs(void);
 //   }
 // }
 
-static void oled_write_layer(void) {
-   oled_write_P(PSTR("Layer: "), false);
-    switch (get_highest_layer(layer_state)) {
-        case _QWERTY:
-            oled_write_P(PSTR("Qwerty\n"), false);
-            break;
+static void print_status_narrow(void) {
+    // Print current mode
+    oled_write_P(PSTR("Lily"), false);
+
+    oled_set_cursor(0, 4);
+    switch (get_highest_layer(default_layer_state)) {
         case _APEX:
-            oled_write_P(PSTR("Apex\n"), false);
+            oled_write_P(PSTR("APEX"), false);
             break;
-        case _RAISE:
-            oled_write_P(PSTR("Raise\n"), false);
-            break;
-        case _LOWER:
-            oled_write_P(PSTR("Lower\n"), false);
-            break;
-        case _ADJUST:
-            oled_write_P(PSTR("Adjust\n"), false);
+        case _QWERTY:
+            oled_write_P(PSTR("QWERT"), false);
             break;
         default:
-            // Or use the write_ln shortcut over adding '\n' to the end of your string
-            oled_write_ln_P(PSTR("Undefined"), false);
-      }
+            oled_write_P(PSTR("null "), false);
+    }
+    oled_set_cursor(0, 6);
+    // oled_write_P(PSTR("\n\n"), false);
+    // Print current layer
+    switch (get_highest_layer(layer_state)) {
+        case _QWERTY:
+            oled_write_P(PSTR("Base "), false);
+            break;
+        case _APEX:
+            oled_write_P(PSTR("Apex "), false);
+            break;
+        case _RAISE:
+            oled_write_P(PSTR("Raise"), false);
+            break;
+        case _LOWER:
+            oled_write_P(PSTR("Lower"), false);
+            break;
+        case _ADJUST:
+            oled_write_P(PSTR("Adj  "), false);
+            break;
+        default:
+            oled_write_P(PSTR("null "), false);
+    }
+    //render_rgb_status();BB
+    // oled_write_P(PSTR("\n\n\n"), false);
+    oled_set_cursor(0, 10);
+    oled_write_P(PSTR("8)"), false);
 }
+
+// static void oled_write_layer(void) {
+//    oled_write_P(PSTR("Layer: "), false);
+//     switch (get_highest_layer(layer_state)) {
+//         case _QWERTY:
+//             oled_write_P(PSTR("Qwerty\n"), false);
+//             break;
+//         case _APEX:
+//             oled_write_P(PSTR("Apex\n"), false);
+//             break;
+//         case _RAISE:
+//             oled_write_P(PSTR("Raise\n"), false);
+//             break;
+//         case _LOWER:
+//             oled_write_P(PSTR("Lower\n"), false);
+//             break;
+//         case _ADJUST:
+//             oled_write_P(PSTR("Adjust\n"), false);
+//             break;
+//         default:
+//             // Or use the write_ln shortcut over adding '\n' to the end of your string
+//             oled_write_ln_P(PSTR("Undefined"), false);
+//       }
+// }
 
 #endif // OLED_DRIVER_ENABLE
 
@@ -349,14 +392,17 @@ bool oled_task_user(void) {
         // All hid stuff on master side since I can't figure out transport and f it all.   
         if ( !is_oled_on() ) {
           oled_on();
+          oled_clear();
         }
         if ( is_hid_connected ) {
+            // oled_clear();
             oled_write_char(0x04, false);
             oled_write_P(PSTR("\n\n\n"), false);
         } else {
             oled_write(read_logo(), false);
             // oled_write_P(PSTR("\n\n\n"), false);
         }
+        // print_status_narrow();
      
       //  if ( is_hid_connected ) {
       //       oled_write_char(0x04, false);
@@ -380,7 +426,8 @@ bool oled_task_user(void) {
         if ( !is_oled_on() ) {
           oled_on();
         }
-        oled_write_layer();
+        // oled_write_layer();
+        print_status_narrow();
     }
     return false;
 }
