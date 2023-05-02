@@ -500,6 +500,7 @@ void oled_task_user(void) {
     } else {
         oled_sugar();
         }
+    return false;
 }
 #endif // OLED_DRIVER_ENABLE
 
