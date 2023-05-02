@@ -499,7 +499,7 @@ void oled_task_user(void) {
         // oled_write_ln(read_mode_icon(keymap_config.swap_lalt_lgui), false);
         // oled_write_ln(read_host_led_state(), false);
     } else {
-        oled_sugar();
+        oled_write(read_logo(), false);
         }
     return false;
 }
