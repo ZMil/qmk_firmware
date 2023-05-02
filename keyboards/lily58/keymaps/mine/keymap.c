@@ -501,10 +501,11 @@ void oled_task_user(void) {
     } else {
         oled_sugar();
         }
+    return false;
 }
 #endif // OLED_DRIVER_ENABLE
 
-// bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 //   if (record->event.pressed) {
 // #ifdef OLED_DRIVER_ENABLE
 //     set_keylog(keycode, record);
