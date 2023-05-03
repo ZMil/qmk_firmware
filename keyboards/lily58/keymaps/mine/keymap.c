@@ -173,10 +173,19 @@ const rgblight_segment_t* const PROGMEM my_rgb_layers[] = RGBLIGHT_LAYERS_LIST(
     three_layer,
     four_layer
 );
-
+uint16_t keyCntr = 0;
 #define OLED_SUGAR_HEIGHT 128
 
 #define OLED_SUGAR_WIDTH  32
+
+#define OLED_SUGAR_WITH_DOWN 1
+
+#define OLED_SUGAR_PIXELS (OLED_SUGAR_HEIGHT*OLED_SUGAR_WIDTH)
+#define OLED_SUGAR_BYTES (OLED_SUGAR_PIXELS/8)
+typedef signed char lineIdx_t;
+lineIdx_t* activeSugar = NULL;
+
+char* pixels = NULL;
 
 bool pixelInvert = false;
 void setPixel(char * pixels, uint8_t h, uint8_t w, bool pix) {
@@ -205,14 +214,6 @@ uint32_t rand_basic(void) {
     return seed;
 }
 
-#define OLED_SUGAR_WITH_DOWN 1
-
-#define OLED_SUGAR_PIXELS (OLED_SUGAR_HEIGHT*OLED_SUGAR_WIDTH)
-#define OLED_SUGAR_BYTES (OLED_SUGAR_PIXELS/8)
-typedef signed char lineIdx_t;
-lineIdx_t* activeSugar = NULL;
-
-char* pixels = NULL;
 
 void keyboard_post_init_user(void) {
     // Enable the LED layers
@@ -304,8 +305,11 @@ void matrix_init_user(void) {
 #ifdef OLED_DRIVER_ENABLE
 
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
-  if (!is_keyboard_master())
-    return OLED_ROTATION_180;  // flips the display 180 degrees if offhand
+  // if (!is_keyboard_master())
+  //   return OLED_ROTATION_180;  // flips the display 180 degrees if offhand
+  if (true) { //is_keyboard_master()) {
+      return OLED_ROTATION_270;
+  } 
   return rotation;
 }
 
@@ -504,6 +508,20 @@ void oled_task_user(void) {
 }
 #endif // OLED_DRIVER_ENABLE
 
+void user_sync_a_update_keyCntr_on_other_board(uint8_t in_buflen, const void* in_data, uint8_t
+        out_buflen, void* out_data) { keyCntr = *((const uint16_t *)in_data); }
+
+#endif
+
+
+void keyboard_post_init_user(void) {
+    // Enable the LED layers
+    rgblight_layers = my_rgb_layers;
+#ifdef OLED_ENABLE
+    transaction_register_rpc(USER_SYNC_KEY_CNTR, user_sync_a_update_keyCntr_on_other_board);
+#endif
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 //   if (record->event.pressed) {
 // #ifdef OLED_DRIVER_ENABLE
@@ -511,6 +529,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 // #endif
 //     // set_timelog();
 //   }
+  #ifdef OLED_ENABLE
+          keyCntr++;
+          transaction_rpc_send(USER_SYNC_KEY_CNTR, sizeof(keyCntr), &keyCntr);
+  #endif
 
   switch (keycode) {
     case LOWER:
