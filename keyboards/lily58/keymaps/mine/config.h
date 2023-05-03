@@ -45,3 +45,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   // Enable if encoder is on the left side
   // #define ENCODER_DIRECTION_FLIP
 #endif
+
+#define SPLIT_TRANSACTION_IDS_USER USER_SYNC_KEY_CNTR
