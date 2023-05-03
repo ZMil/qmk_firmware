@@ -16,6 +16,9 @@
 
 extern uint8_t is_master;
 
+#include "transactions.h"
+#include <print.h>
+
 #define _QWERTY 0
 #define _APEX 1
 #define _LOWER 2
@@ -214,12 +217,18 @@ uint32_t rand_basic(void) {
     return seed;
 }
 
+void user_sync_a_update_keyCntr_on_other_board(uint8_t in_buflen, const void* in_data, uint8_t
+        out_buflen, void* out_data) { keyCntr = *((const uint16_t *)in_data); }
 
 void keyboard_post_init_user(void) {
     // Enable the LED layers
     // rgblight_layers = my_rgb_layers;
 
     // Call the keymap level matrix init.
+
+    #ifdef OLED_ENABLE
+        transaction_register_rpc(USER_SYNC_KEY_CNTR, user_sync_a_update_keyCntr_on_other_board);
+    #endif
   
     rgblight_enable_noeeprom();
     rgblight_sethsv_noeeprom(HSV_PURPLE);
@@ -341,13 +350,15 @@ const char *read_keylogs(void);
 
 void oled_sugar(void) {
     //return;
-
+  #ifdef CONSOLE_ENABLE
+        uprintf("staring sugar\n");
+  #endif
     if (activeSugar == NULL) {
         activeSugar = malloc(OLED_SUGAR_HEIGHT);
         if (activeSugar != NULL) {
             memset( activeSugar, -1, OLED_SUGAR_HEIGHT );
         } else {
-  #ifdef PRINT_DB
+  #ifdef CONSOLE_ENABLE
               uprintf("activeSugar %X failed to inialise\n", activeSugar);
   #endif
               return;
@@ -359,7 +370,7 @@ void oled_sugar(void) {
           if (pixels != NULL) {
               memset( pixels, 0, OLED_SUGAR_BYTES );
           } else {
-  #ifdef PRINT_DB
+  #ifdef CONSOLE_ENABLE
               uprintf("pixels %X failed to inialise\n", pixels);
   #endif
               return;
@@ -368,6 +379,10 @@ void oled_sugar(void) {
       }
 
       static uint8_t sugarCntr = 0;
+
+#ifdef CONSOLE_ENABLE
+        uprintf("before for loop\n");
+#endif
 
     for(int16_t h = OLED_SUGAR_HEIGHT-2; h >= 0; h--) {
           lineIdx_t w = activeSugar[h];
@@ -461,7 +476,13 @@ void oled_sugar(void) {
               oled_sugar();
           }
       }
+      #ifdef CONSOLE_ENABLE
+        uprintf("after for loop\n");
+    #endif
       rand_basic(); //just here to rotate the seed
+      #ifdef CONSOLE_ENABLE
+        uprintf("is oled on\n", is_oled_on());
+#endif
       if(!is_oled_on()) {
           //OLED timedout so we will clear everything and start fresh
           memset( pixels, 0, OLED_SUGAR_BYTES );
@@ -477,50 +498,37 @@ void oled_sugar(void) {
 
 void oled_task_user(void) {
     // Host Keyboard Layer Status
-    if (is_keyboard_master()) {
-    oled_write_P(PSTR("Layer: "), false);
-    switch (get_highest_layer(layer_state)) {
-        case _QWERTY:
-            oled_write_P(PSTR("QWerty\n"), false);
-            break;
-        case _APEX:
-            oled_write_P(PSTR("Apex\n"), false);
-            break;
-        case _RAISE:
-            oled_write_P(PSTR("Raise\n"), false);
-            break;
-        case _LOWER:
-            oled_write_P(PSTR("Lower\n"), false);
-            break;
-        case _ADJUST:
-            oled_write_P(PSTR("Adjust\n"), false);
-            break;
-        default:
-            // Or use the write_ln shortcut over adding '\n' to the end of your string
-            oled_write_ln_P(PSTR("Undefined"), false);
-        }
-        // oled_write_ln(read_mode_icon(keymap_config.swap_lalt_lgui), false);
-        // oled_write_ln(read_host_led_state(), false);
-    } else {
-        oled_write(read_logo(), false);
-        }
+    // if (is_keyboard_master()) {
+    // oled_write_P(PSTR("Layer: "), false);
+    // switch (get_highest_layer(layer_state)) {
+    //     case _QWERTY:
+    //         oled_write_P(PSTR("QWerty\n"), false);
+    //         break;
+    //     case _APEX:
+    //         oled_write_P(PSTR("Apex\n"), false);
+    //         break;
+    //     case _RAISE:
+    //         oled_write_P(PSTR("Raise\n"), false);
+    //         break;
+    //     case _LOWER:
+    //         oled_write_P(PSTR("Lower\n"), false);
+    //         break;
+    //     case _ADJUST:
+    //         oled_write_P(PSTR("Adjust\n"), false);
+    //         break;
+    //     default:
+    //         // Or use the write_ln shortcut over adding '\n' to the end of your string
+    //         oled_write_ln_P(PSTR("Undefined"), false);
+    //     }
+    //     // oled_write_ln(read_mode_icon(keymap_config.swap_lalt_lgui), false);
+    //     // oled_write_ln(read_host_led_state(), false);
+    // } else {
+    //     oled_write(read_logo(), false);
+    // }
+    oled_sugar();
     return false;
 }
 #endif // OLED_DRIVER_ENABLE
-
-void user_sync_a_update_keyCntr_on_other_board(uint8_t in_buflen, const void* in_data, uint8_t
-        out_buflen, void* out_data) { keyCntr = *((const uint16_t *)in_data); }
-
-#endif
-
-
-void keyboard_post_init_user(void) {
-    // Enable the LED layers
-    rgblight_layers = my_rgb_layers;
-#ifdef OLED_ENABLE
-    transaction_register_rpc(USER_SYNC_KEY_CNTR, user_sync_a_update_keyCntr_on_other_board);
-#endif
-}
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 //   if (record->event.pressed) {
